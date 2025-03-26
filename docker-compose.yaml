@@ -1,0 +1,41 @@
+services:
+  backend-klontong:
+    build:
+      context: .
+      dockerfile: ${DOCKERFILE:-Dockerfile}
+    restart: always
+    depends_on:
+      - db-klontong
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: 8080
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 54323
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: klontong
+    networks:
+      - be
+    develop:
+      watch:
+        - path: .
+          action: sync+restart
+          target: /app
+  db-klontong:
+    image: postgres:latest
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+      - ./data/logs:/var/log/postgresql
+      - ./data/config:/etc/postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: klontong
+    ports:
+      - '54323:5432'
+    networks:
+      - be
+networks:
+  be:
+    driver: bridge

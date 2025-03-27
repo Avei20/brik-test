@@ -108,16 +108,16 @@ The project includes two Dockerfile configurations:
 1. **Dockerfile.dev**: For development environment
    ```dockerfile
    FROM oven/bun:latest
-   
+
    WORKDIR /app
-   
+
    COPY package.json .
    COPY bun.lockb .
-   
+
    RUN bun install
-   
+
    COPY . .
-   
+
    CMD ["bun", "run", "start:dev"]
    ```
 
@@ -125,45 +125,45 @@ The project includes two Dockerfile configurations:
    ```dockerfile
    # Build stage
    FROM oven/bun:latest AS build
-   
+
    WORKDIR /app
-   
+
    # Copy package.json and lockfile
    COPY package.json bun.lockb ./
-   
+
    # Install dependencies
    RUN bun install --frozen-lockfile
-   
+
    # Copy source code
    COPY . .
-   
+
    # Build the application
    RUN bun run build
-   
+
    # Production stage
    FROM oven/bun:latest AS production
-   
+
    WORKDIR /app
-   
+
    # Copy package.json and lockfile
    COPY package.json bun.lockb ./
-   
+
    # Install only production dependencies
    RUN bun install --frozen-lockfile --production
-   
+
    # Copy built application from build stage
    COPY --from=build /app/dist ./dist
    COPY --from=build /app/node_modules ./node_modules
-   
+
    # Copy necessary files for runtime
    COPY .env.example ./
-   
+
    # Expose the application port
    EXPOSE 3000
-   
+
    # Set NODE_ENV to production
    ENV NODE_ENV=production
-   
+
    # Start the application
    CMD ["bun", "run", "start:prod"]
    ```
@@ -174,7 +174,7 @@ The project includes two Dockerfile configurations:
    ```bash
    # For production
    docker build -t brik-api .
-   
+
    # For development
    docker build -t brik-api:dev -f Dockerfile.dev .
    ```
@@ -182,19 +182,16 @@ The project includes two Dockerfile configurations:
 2. **Run the container**:
    ```bash
    # For production
-   docker run -p 3000:3000 --env-file .env brik-api
-   
+   docker run -p 8080:8080 --env-file .env brik-api
+
    # For development
-   docker run -p 3000:3000 --env-file .env brik-api:dev
+   docker run -p 8080:8080 --env-file .env brik-api:dev
    ```
 
 3. **Using Docker Compose**:
    ```bash
    # For development
-   docker-compose up -d
-   
-   # For production (if you have a production docker-compose file)
-   docker-compose -f docker-compose.prod.yml up -d
+   docker compose up -d
    ```
 
 ### Environment Variables
@@ -238,10 +235,7 @@ Tests can be run directly within the Docker container:
 
 ```bash
 # Run all unit tests
-docker-compose exec api bun run test
-
-# Run tests with coverage
-docker-compose exec api bun run test:cov
+docker compose exec backend-klontong bun run test
 ```
 
 ## Best Practices Implemented

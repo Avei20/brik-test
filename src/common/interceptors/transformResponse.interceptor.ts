@@ -3,10 +3,13 @@ import {
   Injectable,
   NestInterceptor,
   CallHandler,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ISuccessResponse } from '../interfaces/response.interface';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
 @Injectable()
 export class TransformResponseInterceptor<T>
@@ -25,6 +28,31 @@ export class TransformResponseInterceptor<T>
         statusCode: response.statusCode,
         data: data,
       })),
+      catchError((error) => {
+        if (error instanceof HttpException) {
+          const errorResponse = error.getResponse() as { message?: string } | string;
+          const statusCode = error.getStatus();
+          const message = typeof errorResponse === 'string' ? errorResponse : errorResponse.message || 'Error occurred';
+
+          return throwError(() => new HttpException(
+            {
+              statusCode,
+              message,
+              error: error.name,
+            },
+            statusCode,
+          ));
+        }
+
+        return throwError(() => new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            message: 'Internal server error',
+            error: 'Internal Server Error',
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        ));
+      }),
     );
   }
 }

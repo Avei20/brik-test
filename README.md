@@ -1,99 +1,225 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Brik E-Commerce API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based e-commerce API for managing products, categories, checkout processes, and audit logging.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Project Overview
 
-## Description
+This project is a RESTful API built with NestJS that provides endpoints for managing products and handling checkout processes. The application follows a modular architecture with separate modules for products, checkout, and storage functionalities.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Tech Stack
 
-## Project setup
+- **Backend Framework**: NestJS with TypeScript
+- **Database**: PostgreSQL with TypeORM
+- **File Storage**: MinIO (S3-compatible object storage)
+- **Documentation**: Swagger/OpenAPI
+- **Testing**: Jest for unit testing
+- **Containerization**: Docker
 
-```bash
-$ yarn install
+### Key Features
+
+1. **Product Management**:
+   - CRUD operations for products
+   - Pagination and search functionality
+   - File upload for product images
+
+2. **Category Management**:
+   - Products organized by categories
+
+3. **Checkout Process**:
+   - Add products to cart
+   - Process orders
+
+4. **Audit Logging**:
+   - Track all data changes
+   - Record user actions
+
+## Project Structure
+
+```
+brik-test/
+├── src/
+│   ├── app.module.ts         # Main application module
+│   ├── main.ts               # Application entry point
+│   ├── product/              # Product module
+│   │   ├── product.controller.ts
+│   │   ├── product.service.ts
+│   │   ├── product.entity.ts
+│   │   └── dto/              # Data Transfer Objects
+│   ├── checkout/             # Checkout module
+│   │   ├── checkout.controller.ts
+│   │   ├── checkout.service.ts
+│   │   └── dto/
+│   ├── auditLog/             # Audit logging module
+│   │   ├── auditLog.service.ts
+│   │   └── auditLog.entity.ts
+│   ├── storage/              # Storage module for file uploads
+│   │   └── minio.service.ts
+│   └── common/               # Shared resources
+│       ├── dto/
+│       ├── filters/
+│       └── interceptors/
+├── test/                     # Test files
+├── .env                      # Environment variables
+├── .env.test                 # Test environment variables
+├── docker-compose.yml        # Docker configuration
+├── Dockerfile                # Production Docker configuration
+├── Dockerfile.dev            # Development Docker configuration
+└── package.json              # Project dependencies
 ```
 
-## Compile and run the project
+## Getting Started with Docker
+
+This project is fully containerized and designed to be run using Docker. This approach ensures consistency across different environments and simplifies the setup process.
+
+### Prerequisites
+
+- Docker and Docker Compose
+
+### Running with Docker Compose
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/brik-test.git
+   cd brik-test
+   ```
+
+2. Create environment files:
+   - Copy `.env.example` to `.env` and update the values if needed
+
+3. Start the application and required services:
+   ```bash
+   # For development
+   docker-compose -f docker-compose.yml up -d
+   
+   # For production
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+4. The application will be available at:
+   - API: `http://localhost:3000`
+   - Swagger documentation: `http://localhost:3000/api`
+   - MinIO console: `http://localhost:9001` (if using the included MinIO service)
+
+### Building and Running the Docker Image Directly
+
+You can also build and run the Docker image directly:
 
 ```bash
-# development
-$ yarn run start
+# Build the production image
+docker build -t brik-api .
 
-# watch mode
-$ yarn run start:dev
+# Build the development image
+docker build -t brik-api:dev -f Dockerfile.dev .
 
-# production mode
-$ yarn run start:prod
+# Run the production image
+docker run -p 3000:3000 --env-file .env brik-api
+
+# Run the development image
+docker run -p 3000:3000 --env-file .env brik-api:dev
 ```
 
-## Run tests
+## Environment Variables
+
+The application uses the following environment variables:
+
+```
+# Database Configuration
+DB_HOST=postgres        # Database hostname (use service name in docker-compose)
+DB_PORT=5432            # Database port
+DB_USERNAME=postgres    # Database username
+DB_PASSWORD=postgres    # Database password
+DB_DATABASE=brik        # Database name
+
+# MinIO Configuration
+MINIO_ENDPOINT=minio    # MinIO hostname (use service name in docker-compose)
+MINIO_PORT=9000         # MinIO API port
+MINIO_USE_SSL=false     # Whether to use SSL for MinIO connection
+MINIO_ACCESS_KEY=minioadmin    # MinIO access key
+MINIO_SECRET_KEY=minioadmin    # MinIO secret key
+MINIO_BUCKET=brik-bucket      # MinIO bucket name
+```
+
+### Note on MinIO Usage
+
+This project uses MinIO as the object storage solution for the following reasons:
+
+1. **Security**: Avoids exposing cloud provider credentials (AWS S3, Google Cloud Storage) in a public repository
+2. **Compatibility**: MinIO is API-compatible with Amazon S3, making it easy to switch to S3 in production
+3. **Local Development**: Provides a consistent local development experience without requiring cloud resources
+4. **Flexibility**: Can be easily replaced with other storage solutions like AWS S3 or Google Cloud Storage in production
+
+For production deployment, you can replace MinIO with AWS S3 or Google Cloud Storage by simply updating the environment variables with the appropriate credentials.
+
+## Testing
+
+The project includes comprehensive unit tests for all modules. End-to-end (e2e) testing has been intentionally excluded to focus on unit test coverage.
+
+### Running Tests with Docker
 
 ```bash
-# unit tests
-$ yarn run test
+# Run all unit tests
+docker-compose exec api bun run test
 
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+# Run tests with coverage
+docker-compose exec api bun run test:cov
 ```
 
-## Deployment
+### Test Coverage
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The unit tests cover:
+- Product service and controller
+- Checkout service
+- Audit log service
+- MinIO service for file storage
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Note on E2E Testing
 
-```bash
-$ yarn install -g mau
-$ mau deploy
+This project intentionally does not implement end-to-end (e2e) testing to focus on comprehensive unit test coverage. The unit tests provide sufficient validation of the application's functionality by mocking external dependencies and focusing on business logic.
+
+## API Documentation
+
+The API is documented using Swagger. Once the application is running, you can access the Swagger UI at:
+
+```
+http://localhost:3000/api
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The documentation includes:
+- All available endpoints
+- Request/response schemas
+- Authentication requirements
+- Example requests
 
-## Resources
+## Requirements Fulfillment
 
-Check out a few resources that may come in handy when working with NestJS:
+### Product Management
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Create, read, update, and delete products
+- Product search and filtering
+- Product categorization
+- Image upload and management
 
-## Support
+### Checkout Process
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Add products to cart
+- Process checkout
+- Handle product availability
 
-## Stay in touch
+### Audit Logging
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Track all data changes
+- Record user actions with timestamps
 
-## License
+### API Design
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- RESTful API design
+- Proper error handling
+- Input validation
+- Swagger documentation
+
+### Testing
+
+- Comprehensive unit tests
+- Mocking of external dependencies
+- E2E tests (intentionally excluded)
+

@@ -6,15 +6,22 @@ services:
     restart: always
     depends_on:
       - db-klontong
+      - minio
     ports:
       - '8080:8080'
     environment:
       PORT: 8080
-      POSTGRES_HOST: localhost
-      POSTGRES_PORT: 54323
+      POSTGRES_HOST: db-klontong
+      POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: klontong
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESSKEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRETKEY}
+      MINIO_BUCKET: main
+      MINIO_USE_SSL: "false"
     networks:
       - be
     develop:
@@ -36,6 +43,25 @@ services:
       - '54323:5432'
     networks:
       - be
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  minio:
+    image: docker.io/bitnami/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_DEFAULT_BUCKET: main
+    volumes:
+      - ./data/minio:/bitnami/minio/data
+    networks:
+      - be
+
 networks:
   be:
     driver: bridge

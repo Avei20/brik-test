@@ -4,7 +4,9 @@ import {
   IsNotEmpty,
   IsPositive,
   IsUrl,
+  IsOptional,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateProductDTO {
   @IsString()
@@ -21,30 +23,35 @@ export class CreateProductDTO {
 
   @IsNumber()
   @IsPositive()
+  @Transform(({ value }) => parseFloat(value))
   weight: number;
 
   @IsNumber()
   @IsPositive()
+  @Transform(({ value }) => parseFloat(value))
   width: number;
 
   @IsNumber()
   @IsPositive()
+  @Transform(({ value }) => parseFloat(value))
   height: number;
 
   @IsNumber()
   @IsPositive()
+  @Transform(({ value }) => parseFloat(value))
   length: number;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @IsUrl()
-  image: string;
+  image?: string;
 
   @IsNumber()
   @IsPositive()
+  @Transform(({ value }) => parseFloat(value))
   harga: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsPositive()
+  @Transform(({ value }) => parseInt(value, 10))
   categoryId: number;
 }

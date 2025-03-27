@@ -45,13 +45,13 @@ describe('AuditLogService', () => {
     it('should create an audit log entry', async () => {
       const entity = 'Product';
       const entityId = 123;
-      const action = Action.UPDATE;
+      const action = Action.CREATE;
       const before = { name: 'Old Name' };
       const after = { name: 'New Name' };
 
       const expectedAuditLog = {
         entity,
-        entityId,
+        entityId: entityId.toString(),
         action,
         before,
         after,
@@ -65,7 +65,7 @@ describe('AuditLogService', () => {
 
       expect(mockAuditLogRepository.save).toHaveBeenCalledWith({
         entity: entity,
-        entityId: entityId,
+        entityId: entityId.toString(),
         action: action,
         before: before,
         after: after,
@@ -82,7 +82,7 @@ describe('AuditLogService', () => {
 
       const expectedAuditLog = {
         entity,
-        entityId,
+        entityId: entityId.toString(),
         action,
         before,
         after,
@@ -96,7 +96,7 @@ describe('AuditLogService', () => {
 
       expect(mockAuditLogRepository.save).toHaveBeenCalledWith({
         entity: entity,
-        entityId: entityId,
+        entityId: entityId.toString(),
         action: action,
         before: before,
         after: after,

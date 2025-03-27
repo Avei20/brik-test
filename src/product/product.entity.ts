@@ -1,11 +1,12 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  OneToMany,
+  PrimaryGeneratedColumn,
   ManyToOne,
+  OneToMany,
   UpdateDateColumn,
   DeleteDateColumn,
+  CreateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -55,10 +56,10 @@ export class Product {
   @Column()
   length: number;
 
-  @Column()
+  @Column({ nullable: true })
   image: string;
 
-  @Column()
+  @Column('decimal', { precision: 10, scale: 2 })
   harga: number;
 
   @UpdateDateColumn()

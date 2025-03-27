@@ -3,16 +3,29 @@ import { ProductController } from './product.controller';
 import { CreateProductDTO } from './dto/createProduct.dto';
 import { Product, Category } from './product.entity';
 import { ProductService } from './product.service';
+import { MinioService } from '../storage/minio.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('ProductController', () => {
   let controller: ProductController;
   let mockProductService: Partial<ProductService>;
+  let mockMinioService: Partial<MinioService>;
 
   beforeEach(async () => {
     mockProductService = {
       create: jest.fn(),
       findOne: jest.fn(),
+      findAll: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+
+    mockMinioService = {
+      uploadFile: jest.fn().mockResolvedValue({
+        url: 'http://example.com/ctrl.jpg',
+        path: 'products/ctrl.jpg',
+      }),
+      deleteFile: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -21,6 +34,10 @@ describe('ProductController', () => {
         {
           provide: ProductService,
           useValue: mockProductService,
+        },
+        {
+          provide: MinioService,
+          useValue: mockMinioService,
         },
       ],
     }).compile();
@@ -42,10 +59,17 @@ describe('ProductController', () => {
         width: 12,
         length: 18,
         height: 6,
-        image: 'http://example.com/ctrl.jpg',
         harga: 6000,
         categoryId: 2,
       };
+
+      // Mock file upload
+      const mockFile = {
+        buffer: Buffer.from('test image content'),
+        originalname: 'test.jpg',
+        mimetype: 'image/jpeg',
+        size: 1024,
+      } as Express.Multer.File;
 
       const expectedProduct: Product = {
         // Simulate the product object returned by the service
@@ -57,13 +81,12 @@ describe('ProductController', () => {
         width: createDto.width,
         length: createDto.length,
         height: createDto.height,
-        image: createDto.image,
+        image: 'http://example.com/ctrl.jpg', // This should match the URL from MinioService mock
         harga: createDto.harga,
-        category: { id: createDto.categoryId } as Category, // Cast needed if Category props aren't fully mocked
+        category: { id: createDto.categoryId } as Category,
         updatedAt: new Date(),
         deletedAt: null,
         isDeleted: false,
-        // products: [] // If Category entity was fully mocked
       };
 
       // Configure the mock service's create method
@@ -71,13 +94,25 @@ describe('ProductController', () => {
         expectedProduct,
       );
 
-      // Act
-      const result = await controller.create(createDto);
+      // Act - Pass the file separately as it would be in the actual controller
+      const result = await controller.create(createDto, mockFile);
 
       // Assert
-      // Check if the service method was called correctly
+      // The controller should have called MinioService.uploadFile
+      expect(mockMinioService.uploadFile).toHaveBeenCalledWith(
+        mockFile.buffer,
+        mockFile.originalname,
+        expect.objectContaining({
+          contentType: mockFile.mimetype,
+        }),
+      );
+
+      // The controller should have called ProductService.create with the DTO + image URL
       expect(mockProductService.create).toHaveBeenCalledTimes(1);
-      expect(mockProductService.create).toHaveBeenCalledWith(createDto);
+      expect(mockProductService.create).toHaveBeenCalledWith({
+        ...createDto,
+        image: 'http://example.com/ctrl.jpg', // This should match the URL from MinioService mock
+      });
 
       // Check if the controller returned the result from the service
       expect(result).toEqual(expectedProduct);
@@ -88,20 +123,21 @@ describe('ProductController', () => {
     it('should call ProductService.findOne with the correct id and return the result', async () => {
       const productId = 1;
       const expectedProduct: Product = {
-        name: 'Test Ciki From Controller',
-        description: 'Super yummy',
-        sku: 'CTRLSKU456',
-        weight: 150,
-        width: 12,
-        length: 18,
-        height: 6,
-        image: 'http://example.com/ctrl.jpg',
-        harga: 6000,
-        category: { id: 2 } as Category,
+        id: productId,
+        sku: 'SKU123',
+        name: 'Test Product',
+        description: 'Test Description',
+        weight: 100,
+        width: 10,
+        length: 15,
+        height: 5,
+        image: 'http://example.com/image.jpg',
+        harga: 5000,
+        category: { id: 1 } as Category,
         updatedAt: new Date(),
         deletedAt: null,
         isDeleted: false,
-      } as Product;
+      };
 
       (mockProductService.findOne as jest.Mock).mockResolvedValue(
         expectedProduct,
@@ -111,7 +147,6 @@ describe('ProductController', () => {
 
       expect(mockProductService.findOne).toHaveBeenCalledTimes(1);
       expect(mockProductService.findOne).toHaveBeenCalledWith(productId);
-
       expect(result).toEqual(expectedProduct);
     });
 

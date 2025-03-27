@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product, Category } from './product.entity';
+import { Product } from './product.entity';
 import {
   Repository,
   EntityNotFoundError,
@@ -12,7 +12,7 @@ import { AuditLogService } from '../auditLog/auditLog.service';
 import { Action } from '../auditLog/auditLog.entity';
 import { FindAllDTO } from './dto/findAll.dto';
 import { UpdateProductDTO } from './dto/updateProduct.dto';
-import { PaginatedResponse } from 'src/common/dto/paginatio.dto';
+import { PaginatedResponse } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class ProductService {
@@ -43,6 +43,46 @@ export class ProductService {
     return result;
   }
 
+  async update(id: number, data: UpdateProductDTO): Promise<Product> {
+    const product = await this.findOne(id);
+    const oldProduct = { ...product };
+
+    Object.assign(product, {
+      ...data,
+      ...(data.categoryId && { category: { id: data.categoryId } }),
+    });
+
+    const result = await this.productRepository.save(product);
+
+    await this.auditLogService.createLog(
+      Product.name,
+      result.id,
+      Action.UPDATE,
+      oldProduct,
+      result,
+    );
+
+    return result;
+  }
+
+  async delete(id: number): Promise<void> {
+    const product = await this.findOne(id);
+    const oldProduct = { ...product };
+    
+    product.isDeleted = true;
+    product.deletedAt = new Date();
+
+    const result = await this.productRepository.save(product);
+
+    await this.auditLogService.createLog(
+      Product.name,
+      result.id,
+      Action.DELETE,
+      oldProduct,
+      result,
+    );
+  }
+
   async findAll({
     page,
     limit,
@@ -50,92 +90,41 @@ export class ProductService {
   }: FindAllDTO): Promise<PaginatedResponse<Product>> {
     const skip = (page - 1) * limit;
 
-    const where: FindOptionsWhere<Product>[] = [];
+    const where: FindOptionsWhere<Product> = {
+      isDeleted: false,
+    };
 
     if (search) {
-      where.push({ name: ILike(`%${search}%`) });
-      where.push({ sku: ILike(`%${search}%`) });
-      where.push({ description: ILike(`%${search}%`) });
+      where.name = ILike(`%${search}%`);
     }
 
-    const [data, total] = await this.productRepository.findAndCount({
-      where: where.length > 0 ? where : undefined,
-      skip: skip,
-      take: limit,
-      order: { id: 'ASC' },
+    const [items, total] = await this.productRepository.findAndCount({
+      where,
       relations: ['category'],
+      skip,
+      take: limit,
     });
 
-    const totalPages = Math.ceil(total / limit);
-
-    return { data, total, page, limit, totalPages };
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: number): Promise<Product> {
     try {
-      const product = await this.productRepository.findOneOrFail({
-        where: { id },
+      return await this.productRepository.findOneOrFail({
+        where: { id, isDeleted: false },
         relations: ['category'],
       });
-      return product;
-    } catch (error: unknown) {
+    } catch (error) {
       if (error instanceof EntityNotFoundError) {
-        this.logger.warn(`Product with id ${id} not found`);
         throw new NotFoundException(`Product with ID ${id} not found`);
       }
-
-      const stack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`Failed to find product with ID ${id}`, stack);
       throw error;
     }
-  }
-
-  async update(id: number, data: UpdateProductDTO): Promise<Product> {
-    const existingProduct = await this.findOne(id);
-
-    const updateData: Partial<Product> = { ...data };
-
-    if (data.categoryId !== undefined) {
-      updateData.category = { id: data.categoryId } as Category;
-    }
-
-    const updatedProduct = await this.productRepository.preload({
-      id: id,
-      ...updateData,
-    });
-
-    if (!updatedProduct) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-
-    const savedProduct = await this.productRepository.save(updatedProduct);
-
-    await this.auditLogService.createLog(
-      Product.name,
-      id,
-      Action.UPDATE,
-      existingProduct,
-      savedProduct,
-    );
-
-    return savedProduct;
-  }
-
-  async delete(id: number): Promise<void> {
-    const product = await this.findOne(id);
-
-    const result = await this.productRepository.delete(id);
-
-    if (result.affected === 0) {
-      throw new NotFoundException('Product with ID ' + id + ' not found');
-    }
-
-    await this.auditLogService.createLog(
-      Product.name,
-      id,
-      Action.DELETE,
-      product,
-      null,
-    );
   }
 }

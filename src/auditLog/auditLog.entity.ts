@@ -23,7 +23,7 @@ export class AuditLog {
   entity: string;
 
   @Column()
-  entityId: number;
+  entityId: string;
 
   @Column()
   action: Action;

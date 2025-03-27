@@ -14,17 +14,17 @@ export class AuditLogService {
 
   async createLog(
     entity: string,
-    entityId: number,
+    entityId: string | number,
     action: Action,
     before: Record<string, any> | null,
     after: Record<string, any> | null,
   ): Promise<AuditLog> {
     const auditLog: DeepPartial<AuditLog> = {
-      entity: entity,
-      entityId: entityId,
-      action: action,
-      before: before,
-      after: after,
+      entity,
+      entityId: typeof entityId === 'number' ? entityId.toString() : entityId,
+      action,
+      before,
+      after,
     };
 
     return this.auditLogRepository.save(auditLog);

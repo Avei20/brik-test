@@ -16,12 +16,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: klontong
-      MINIO_ENDPOINT: minio
+      MINIO_ENDPOINT: localhost
       MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESSKEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRETKEY}
+      MINIO_ACCESS_KEY: 3NxpyPysT7L43zTU07Ys
+      MINIO_SECRET_KEY: ThfzkoY7LssXnuc7hxYd0XfbmWjBO4LniDptEihv
       MINIO_BUCKET: main
-      MINIO_USE_SSL: "false"
+      MINIO_USE_SSL: 'false'
     networks:
       - be
     develop:
@@ -44,18 +44,19 @@ services:
     networks:
       - be
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
   minio:
     image: docker.io/bitnami/minio
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '9000:9000'
+      - '9001:9001'
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: paleo
+      MINIO_ROOT_PASSWORD: paleo
+      MINIO_SERVER_URL: http://localhost:9000
       MINIO_DEFAULT_BUCKET: main
     volumes:
       - ./data/minio:/bitnami/minio/data

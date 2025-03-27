@@ -14,13 +14,27 @@ export class MinioService implements StorageInterface {
 
   constructor(private readonly configService: ConfigService) {
     this.bucket = this.configService.get<string>('MINIO_BUCKET') || 'products';
+    this.logger.log(`Minio Bucket Name: ${this.bucket}`); // ADDED: Log bucket name
+
+    const minioEndpoint = this.configService.get<string>('MINIO_ENDPOINT') || 'localhost';
+    const minioPort = Number(this.configService.get('MINIO_PORT')) || 9000;
+    const minioAccessKey = this.configService.get<string>('MINIO_ACCESS_KEY') || 'minioadmin';
+    const minioSecretKey = this.configService.get<string>('MINIO_SECRET_KEY') || 'minioadmin';
+
+    this.logger.log(`Minio Endpoint from Config: ${minioEndpoint}`); // ADDED: Log endpoint
+    this.logger.log(`Minio Port from Config: ${minioPort}`); // ADDED: Log port
+    this.logger.log(`Minio Access Key from Config: ${minioAccessKey.substring(0, 5)}...`); // ADDED: Log first 5 chars of access key
+    this.logger.log(`Minio Secret Key from Config: ${minioSecretKey.substring(0, 5)}...`); // ADDED: Log first 5 chars of secret key
+
+
     this.client = new Client({
-      endPoint: this.configService.get<string>('MINIO_ENDPOINT') || 'localhost',
-      port: Number(this.configService.get('MINIO_PORT')) || 9000,
+      endPoint: minioEndpoint,
+      port: minioPort,
       useSSL: false,
-      accessKey: this.configService.get<string>('MINIO_ACCESS_KEY') || 'minioadmin',
-      secretKey: this.configService.get<string>('MINIO_SECRET_KEY') || 'minioadmin',
+      accessKey: minioAccessKey,
+      secretKey: minioSecretKey,
     });
+
 
     // Check MinIO availability in the background
     this.checkMinioAvailability();
@@ -29,7 +43,7 @@ export class MinioService implements StorageInterface {
   private async checkMinioAvailability(): Promise<void> {
     try {
       this.logger.log('Endpoint MinIO : ' + this.configService.get<string>('MINIO_ENDPOINT') + ' and port :' + this.configService.get('MINIO_PORT'))
-      this.logger.log('Checking MinIO availability using access key :' + this.configService.get<string>('MINIO_ACCESS_KEY') + 'and secret key :' + this.configService.get<string>('MINIO_SECRET_KEY'))
+      this.logger.log('Checking MinIO availability using access key :' + this.configService.get<string>('MINIO_ACCESS_KEY') + ' and secret key :' + this.configService.get<string>('MINIO_SECRET_KEY'))
       // Simple ping to check if MinIO is available
       await this.client.listBuckets();
       this.isMinioAvailable = true;

@@ -84,20 +84,17 @@ This project is fully containerized and designed to be run using Docker. This ap
    ```
 
 2. Create environment files:
-   - Copy `.env.example` to `.env` and update the values if needed
+   - Copy `env.example` to `.env` and update the values if needed
 
 3. Start the application and required services:
    ```bash
    # For development
-   docker-compose -f docker-compose.yml up -d
-   
-   # For production
-   docker-compose -f docker-compose.prod.yml up -d
+   docker compose up --build
    ```
 
 4. The application will be available at:
-   - API: `http://localhost:3000`
-   - Swagger documentation: `http://localhost:3000/api`
+   - API: `http://localhost:8080`
+   - Swagger documentation: `http://localhost:8080/api`
    - MinIO console: `http://localhost:9001` (if using the included MinIO service)
 
 ### Building and Running the Docker Image Directly
@@ -112,10 +109,10 @@ docker build -t brik-api .
 docker build -t brik-api:dev -f Dockerfile.dev .
 
 # Run the production image
-docker run -p 3000:3000 --env-file .env brik-api
+docker run -p 8080:8080 --env-file .env brik-api
 
 # Run the development image
-docker run -p 3000:3000 --env-file .env brik-api:dev
+docker run -p 8080:8080 --env-file .env brik-api:dev
 ```
 
 ## Environment Variables
@@ -158,10 +155,10 @@ The project includes comprehensive unit tests for all modules. End-to-end (e2e) 
 
 ```bash
 # Run all unit tests
-docker-compose exec api bun run test
+docker compose exec backend-klontong bun run test
 
-# Run tests with coverage
-docker-compose exec api bun run test:cov
+# Run unit test using bun Directly
+bun run test
 ```
 
 ### Test Coverage
@@ -181,7 +178,7 @@ This project intentionally does not implement end-to-end (e2e) testing to focus 
 The API is documented using Swagger. Once the application is running, you can access the Swagger UI at:
 
 ```
-http://localhost:3000/api
+http://localhost:8080/api
 ```
 
 The documentation includes:
@@ -222,4 +219,3 @@ The documentation includes:
 - Comprehensive unit tests
 - Mocking of external dependencies
 - E2E tests (intentionally excluded)
-

@@ -79,7 +79,7 @@ This project is fully containerized and designed to be run using Docker. This ap
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/brik-test.git
+   git clone https://github.com/Avei20/brik-test.git
    cd brik-test
    ```
 
